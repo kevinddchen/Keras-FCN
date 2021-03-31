@@ -1,4 +1,4 @@
 # Keras-FCN
-Keras implementation of fully convolutional network based on Shelhamer et al (arXiv:1605.06211) trained for semantic segmentation on the Pascal VOC dataset
 
-## WORK IN PROGRESS!!!
+Keras implementation of the fully convolutional network outlined in <a href="https://arxiv.org/abs/1605.06211">Shelhamer et al (2016)</a>, which performs semantic image segmentation according to the Pascal VOC Challenge.
+See 'readme.pdf' for more details.
