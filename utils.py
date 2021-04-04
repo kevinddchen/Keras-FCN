@@ -191,6 +191,7 @@ def display_image(arr, palette=PALETTE):
     img = img.convert('RGB')
 
   plt.imshow(np.array(img))
+  plt.axis('off')
   plt.show()
 
 
