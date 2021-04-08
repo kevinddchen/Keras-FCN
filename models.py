@@ -125,8 +125,6 @@ def fcn16(vgg16, fcn32, l2=0):
     TensorFlow model
   """
 
-  model32.get_layer('score7').trainable=False
-
   x = keras.layers.Conv2DTranspose(filters=21, kernel_size=(4,4), strides=(2,2),
                                    padding='same', use_bias=False, activation='linear',
                                    kernel_initializer=BilinearInitializer(),
@@ -146,7 +144,7 @@ def fcn16(vgg16, fcn32, l2=0):
                                    kernel_regularizer=keras.regularizers.L2(l2=l2),
                                    name='fcn16')(x)
 
-  return keras.Models(fcn32.input, x)
+  return keras.Model(fcn32.input, x)
 
 
 
@@ -184,19 +182,21 @@ def fcn8(vgg16, fcn16, l2=0):
                                    kernel_regularizer=keras.regularizers.L2(l2=l2),
                                    name='fcn8')(x)
 
-  return keras.Models(fcn16.input, x)
+  return keras.Model(fcn16.input, x)
 
 
 
 class BilinearInitializer(tf.keras.initializers.Initializer):
-  """Initializer for Conv2DTranspose to perform bilinear interpolation."""
+  """Initializer for Conv2DTranspose to perform bilinear interpolation on each channel."""
 
   def __init__(self):
     pass
 
   def __call__(self, shape, dtype=None):
 
-    kernel_size, _, n, m = shape
+    kernel_size, _, filters, _ = shape
+
+    arr = np.zeros( (kernel_size, kernel_size, filters, filters) )
 
     ## make filter that performs bilinear interpolation through Conv2DTranspose
     upscale_factor = (kernel_size+1)//2
@@ -208,9 +208,10 @@ class BilinearInitializer(tf.keras.initializers.Initializer):
     kernel = (1-np.abs(og[0]-center)/upscale_factor) * (1-np.abs(og[1]-center)/upscale_factor)
     ## kernel shape is (kernel_size, kernel_size)
 
-    kernel = np.repeat(kernel[:,:,np.newaxis], n, axis=-1)
-    kernel = np.repeat(kernel[:,:,:,np.newaxis], m, axis=-1)
-    return tf.convert_to_tensor(kernel, dtype=dtype)
+    for i in range(filters):
+      arr[..., i, i] = kernel
+
+    return tf.convert_to_tensor(arr, dtype=dtype)
 
 
 
