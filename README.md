@@ -34,5 +34,20 @@ The model details can be found in <a href="https://github.com/kevinddchen/Keras-
 The base CNN we use is VGG16.
 First, the fully-connected layers are converted into convolutional layers.
 Second, the final layer that predicts 1000 classes is replaced with a layer that predicts 21 classes.
-Third, these predictions are fed into a transposed convolutional layer that performs bilinear interpolation, upsampling by x32 to the original resolution.
-This defines the FCN32 network.
+Third, these predictions are fed into a transposed convolutional layer that performs bilinear interpolation, upsampling x32 to the original resolution.
+This defines the <i>FCN32</i> network.
+
+As previously mentioned, we can utilize the intermediate layers of the CNN to improve the accuracy of the segmentation.
+For the <i>FCN16</i> network, instead of upsampling x32, we upsample x2.
+This gives us an output whose resolution matches that of the 'block4_pool' layer of VGG16.
+Thus we can predict 21 classes from 'block4_pool' and add these two outputs together.
+This is upsampled x16 to get to the original resolution.
+A similar procedure is also done for the <i>FCN8</i> network, where we include information from the 'block3_pool' layer of VGG16 and the upsampling is x8.
+
+The training details can be found in ???.
+We pick the same training and validation set as Berkeley SBD.
+When training, we fine-tune the model by first training the FCN32, FCN16, and FCN8 layers in turn, freezing parts of the network that are harder to train.
+Each model is trained for 10 epochs at a fixed training rate of 1e-4 with the Adam optimizer and L2 regularization with strength 1e-5.
+Afterwards, we unfreeze all layers and train for a further ??? epochs to arrive at our final model.
+
+## Results
