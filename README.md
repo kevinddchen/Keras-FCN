@@ -21,7 +21,7 @@ For a quick introduction, see <a href="https://nanonets.com/blog/how-to-do-seman
 
 Below are the predicted labels for three FCNs, called FCN32, FCN16, and FCN8.
 
-<img src="assets/32.png" alt="32" width=300>
+<img src="assets/fcn32.png" alt="32" width=300>
 
 The <a href="http://host.robots.ox.ac.uk/pascal/VOC/">Pascal VOC project</a> is a dataset containing images whose pixels have been labeled according to 20 categories, which include aeroplanes, cars, people, and TVs.
 The number of images with labels is augmented in the <a href="http://home.bharathh.info/pubs/codes/SBD/download.html">Berkeley Segmentation Boundaries Dataset</a>, which contains ~11k labelled images.
