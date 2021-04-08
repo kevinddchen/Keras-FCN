@@ -1,32 +1,38 @@
 # Keras-FCN
 
-This is a Keras implementation of the fully convolutional network outlined in Shelhamer et al. (2016), which performs semantic image segmentation according to the Pascal VOC Challenge.
-This readme will present the results and then outline the basics of the implementation.
-My hope is that this will be readable to non-technical persons, such as myself, who are looking to learn about fully convolutional networks.
+This is a Keras implementation of the fully convolutional network outlined in Shelhamer et al. (2016), which performs semantic image segmentation on the Pascal VOC dataset.
+My hope is that this document will be readable to non-technical persons, such as myself, who are looking to learn about fully convolutional networks.
 
 ## Introduction
-The goal of **semantic segmentation** is to identify objects, such as cars or dogs, in an image and label the corresponding pixels.
+
+The goal of **semantic segmentation** is to identify objects, like cars and dogs, in an image by labelling the corresponding pixels.
 For a quick introduction, see <a href="https://nanonets.com/blog/semantic-image-segmentation-2020/">this article</a>.
-
-A **fully convolutional network (FCN)** does this by repurposing a convolutional neural network pre-trained to perform classification.
-The CNN input is dragged across the image and the network tries to detect objects by classifying subregions of the image.
-Doing this results in a 'heatmap' for regions where the CNN was able to arrive at a confident classification of an object.
-However, this heatmap has low resolution since we downsample at each pooling layer of the CNN.
-When we upsample to the original resolution, we can utilize the other layers of the CNN to increase the resolution of the heatmap.
-For a quick introduction, see <a href="https://nanonets.com/blog/how-to-do-semantic-segmentation-using-deep-learning/">this article</a>.
-
-As an example, below is an image and its label.
+As an example, below is an image and its pixel labels.
 
 <img src="assets/biker.jpg" alt="biker" width=300> <img src="assets/biker_label.png" alt="biker label" width=300>
 
-Below is the predicted label for naive FCNs trained to upsample by 32x, 16x, and 8x resolution.
+A **fully convolutional network (FCN)** is an artificial neural network that performs semantic segmentation. 
+The bottom layers of a FCN are those of a convolutional neural network (CNN), usually taken from a pre-trained network like VGGNet or GoogLeNet.
+The purpose of these layers is to perform classification on subregions of the image.
+The top layers of a FCN are transposed convolutional layers, which upsample the results of the classification to the resolution of the original image.
+This gives us a label for each pixel.
+When upsampling, we can also utilize the intermediate layers of the CNN to improve the accuracy of the segmentation.
+For a quick introduction, see <a href="https://nanonets.com/blog/how-to-do-semantic-segmentation-using-deep-learning/">this article</a>.
+
+Below are the predicted labels for three FCNs, called FCN32, FCN16, and FCN8.
 
 <img src="assets/32.png" alt="32" width=300>
 
-The <a href="http://host.robots.ox.ac.uk/pascal/VOC/">Pascal VOC project</a> is a dataset containing images that have been labeled.
-There are 20 categories for the labels, which include aeroplanes, cars, people, and TVs.
-The number of images with labels is augmented in the <a href="http://home.bharathh.info/pubs/codes/SBD/download.html">Berkeley Segmentation Boundaries Dataset</a>, which includes ~11k labelled images.
+The <a href="http://host.robots.ox.ac.uk/pascal/VOC/">Pascal VOC project</a> is a dataset containing images whose pixels have been labeled according to 20 categories, which include aeroplanes, cars, people, and TVs.
+The number of images with labels is augmented in the <a href="http://home.bharathh.info/pubs/codes/SBD/download.html">Berkeley Segmentation Boundaries Dataset</a>, which contains ~11k labelled images.
 
 ## Model
 
 We follow the steps in the <a href="https://arxiv.org/abs/1605.06211">original paper by Shelhamer et al. (2016)</a>.
+The model details can be found in <a href="https://github.com/kevinddchen/Keras-FCN/blob/main/models.py">models.py</a>
+
+The base CNN we use is VGG16.
+First, the fully-connected layers are converted into convolutional layers.
+Second, the final layer that predicts 1000 classes is replaced with a layer that predicts 21 classes.
+Third, these predictions are fed into a transposed convolutional layer that performs bilinear interpolation, upsampling by x32 to the original resolution.
+This defines the FCN32 network.
