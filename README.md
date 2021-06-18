@@ -1,3 +1,5 @@
+# WORK CURRENTLY IN PROGRESS!
+
 # Keras-FCN
 
 This is a Keras implementation of the fully convolutional network outlined in <a href="https://arxiv.org/abs/1605.06211">Shelhamer et al. (2016)</a>, which performs semantic image segmentation on the Pascal VOC dataset.
@@ -45,14 +47,12 @@ The filenames of the validation samples are found in <a href="https://github.com
 If you want to duplicate our dataset, you can download the <a href="https://github.com/kevinddchen/Keras-FCN/tree/main/data">data/</a> folder and the SBD dataset.
 After untarring, place the contents of `benchmark_RELEASE/dataset/img` into <a href="https://github.com/kevinddchen/Keras-FCN/tree/main/data/images_mat">data/images_mat/</a> and `benchmark_RELEASE/dataset/cls` into <a href="https://github.com/kevinddchen/Keras-FCN/tree/main/data/labels_mat">data/labels_mat/</a>.
 
+<a href="https://github.com/kevinddchen/Keras-FCN/blob/main/data.ipynb">data.ipynb</a> puts the data into .tfrecords files, since it cannot all be loaded into RAM.
+
 ## Model
 
 We follow the steps in the <a href="https://arxiv.org/abs/1605.06211">original paper by Shelhamer et al. (2016)</a>.
 Our model details can be found in <a href="https://github.com/kevinddchen/Keras-FCN/blob/main/models.py">models.py</a>.
-
-The data is downloaded directly from the Berkely SBD website and preprocessed into a TensorFlow Records files since the data cannot fit into RAM.
-We use their training and validation set, which have sizes 8,498 and 2,857 respectively.
-Note that this is different from what Shelhamer did.
 
 The base CNN we use is VGG16.
 First, the fully-connected layers are converted into convolutional layers.
