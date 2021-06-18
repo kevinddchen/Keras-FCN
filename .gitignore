@@ -1,8 +1,0 @@
-*~
-.*~
-.DS_Store
-.ipynb_checkpoints
-__pycache__
-data/images_mat/
-data/labels_mat/
-data/*.tfrecords
