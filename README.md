@@ -1,9 +1,9 @@
 # Keras-FCN
 
-This is a Keras implementation of the fully convolutional network outlined in Shelhamer et al. (2016), which performs semantic image segmentation on the Pascal VOC dataset.
-My hope is that this document will be readable to non-technical persons, such as myself, who are looking to learn about fully convolutional networks.
+This is a Keras implementation of the fully convolutional network outlined in <a href="https://arxiv.org/abs/1605.06211">Shelhamer et al. (2016)</a>, which performs semantic image segmentation on the Pascal VOC dataset.
+My hope is that this document will be readable to people outside of deep learning, such as myself, who are looking to learn about fully convolutional networks.
 
-In preparation, I found the following repos very helpful for reference:
+In preparation, I found the following repos invaluable for reference:
 
 https://github.com/shelhamer/fcn.berkeleyvision.org
 
@@ -13,7 +13,7 @@ https://github.com/aurora95/Keras-FCN
 
 ## Introduction
 
-The goal of **semantic segmentation** is to identify objects, like cars and dogs, in an image by labelling the corresponding pixels into classes.
+The goal of **semantic segmentation** is to identify objects, like cars and dogs, in an image by labelling the corresponding group of pixels as belonging to that class.
 For an introduction, see <a href="https://nanonets.com/blog/semantic-image-segmentation-2020/">this article</a>.
 As an example, below is an image and its pixel labels.
 
@@ -22,13 +22,28 @@ As an example, below is an image and its pixel labels.
 A **fully convolutional network (FCN)** is an artificial neural network that performs semantic segmentation. 
 The bottom layers of a FCN are those of a convolutional neural network (CNN), usually taken from a pre-trained network like VGGNet or GoogLeNet.
 The purpose of these layers is to perform classification on subregions of the image.
-The top layers of a FCN are transposed convolutional layers, which upsample the results of the classification to the resolution of the original image.
+The top layers of a FCN are **transposed convolution/deconvolution** layers, which upsample the results of the classification to the resolution of the original image.
 This gives us a label for each pixel.
 When upsampling, we can also utilize the intermediate layers of the CNN to improve the accuracy of the segmentation.
 For an introduction, see <a href="https://nanonets.com/blog/how-to-do-semantic-segmentation-using-deep-learning/">this article</a>.
 
 The <a href="http://host.robots.ox.ac.uk/pascal/VOC/">Pascal VOC project</a> is a dataset containing images whose pixels have been labeled according to 20 classes, which include aeroplanes, cars, and people.
-The number of images with labels is augmented in the <a href="http://home.bharathh.info/pubs/codes/SBD/download.html">Berkeley Segmentation Boundaries Dataset</a>, which contains 11,355 labelled images.
+We will be performing semantic segmentation according to this dataset.
+
+## Data
+
+The number of images with labels is augmented by the <a href="http://home.bharathh.info/pubs/codes/SBD/download.html">Berkeley Segmentation Boundaries Dataset (SBD)</a>, which contains 11,355 labelled images.
+However, there are 676 labelled images in the original Pascal VOC dataset that are missing from the SBD.
+We have divided our data as follows:
+
+- Training set: the SBD training set (8,498 images) + last 1,657 images (out of 2,857 total) of the SBD validation set + the 676 non-overlapping images of the Pascal VOC trainval set.
+- Validation set: first 1,200 images (out of 2,857 total) of the SBD validation set
+
+In total, we have 10,831 training samples and 1,200 validation samples.
+The filenames of the training samples are found in <a href="https://github.com/kevinddchen/Keras-FCN/blob/main/data/train_mat.txt">data/train_mat.txt</a> and <a href="https://github.com/kevinddchen/Keras-FCN/blob/main/data/train_png.txt">data/train_png.txt</a>. 
+The filenames of the validation samples are found in <a href="https://github.com/kevinddchen/Keras-FCN/blob/main/data/val_mat.txt">data/val_mat.txt</a>.
+If you want to duplicate our dataset, you can download the <a href="https://github.com/kevinddchen/Keras-FCN/tree/main/data">data/</a> folder and the SBD dataset.
+After untarring, place the contents of `benchmark_RELEASE/dataset/img` into <a href="https://github.com/kevinddchen/Keras-FCN/tree/main/data/images_mat">data/images_mat/</a> and `benchmark_RELEASE/dataset/cls` into <a href="https://github.com/kevinddchen/Keras-FCN/tree/main/data/labels_mat">data/labels_mat/</a>.
 
 ## Model
 
