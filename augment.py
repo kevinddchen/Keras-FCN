@@ -23,5 +23,5 @@ def resize_with_pad(image, label, size=512):
     image = tf.image.resize_with_pad(image, size, size, method=tf.image.ResizeMethod.NEAREST_NEIGHBOR)
     ## since `resize_with_pad` pads with zeros, use fact that boundary class is -1 to pad with -1 instead.
     label = tf.image.resize_with_pad(label+1, size, size, method=tf.image.ResizeMethod.NEAREST_NEIGHBOR)-1
-    label = tf.cast(utils.label_to_onehot(label), tf.float32)
+    label = utils.label_to_onehot(label)
     return image, label
