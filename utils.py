@@ -110,7 +110,7 @@ def label_to_image(label, palette=PALETTE):
     Return
         (array<np.uint8>): RGB values for each pixel. Shape=(height, width, 3)
     '''
-    return palette[label[..., 0]]
+    return palette[label[..., 0]].astype(np.uint8)
 
 
 
