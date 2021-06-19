@@ -4,9 +4,8 @@ This file contains useful methods for handling image files.
 
 import numpy as np
 import tensorflow as tf
-import cv2 as cv
 import scipy.io # to read .mat files
-from PIL import Image # to read raw data from palettised .png files
+from PIL import Image # to read image files
 
 PALETTE = np.reshape([
     0, 0, 0, 128, 0, 0, 0, 128, 0, 128, 128, 0, 0, 0, 128, 128, 0, 128, 0, 128,
@@ -66,8 +65,8 @@ def get_image(path):
     Return
         (array<np.uint8>): RGB values for each pixel. Shape=(height, width, 3)
     '''
-    arr = cv.imread(path)
-    return np.flip(arr, axis=2) # OpenCV reads as BRG
+    jpg = Image.open(path).convert('RGB')
+    return np.array(jpg)
 
 
 
@@ -78,10 +77,11 @@ def get_label_mat(path):
         path (string): Path to .mat file
     
     Return
-        (array<np.uint8>): Class as an integer in [0, 20] for each pixel. Shape=(height, width)
+        (array<np.uint8>): Class as an integer in [0, 20] for each pixel. Shape=(height, width, 1)
     '''
     mat = scipy.io.loadmat(path)
-    return mat['GTcls']['Segmentation'].item(0,0) # this is how segmentation is stored
+    arr = mat['GTcls']['Segmentation'].item(0,0) # this is how segmentation is stored
+    return arr[..., None]
 
 
 
@@ -92,10 +92,11 @@ def get_label_png(path):
         path (string): Path to .png file
     
     Return
-        (array<np.uint8>): Class as an integer in [0, 20] or 255 (for boundary) for each pixel. Shape=(height, width)
+        (array<np.uint8>): Class as an integer in [-1, 20], where -1 is boundary, for each pixel. Shape=(height, width, 1)
     '''
     png = Image.open(path) # image is saved as palettised png. OpenCV cannot load without converting.
-    return np.array(png)
+    arr = np.array(png)
+    return arr[..., None]
 
 
 
@@ -103,13 +104,13 @@ def label_to_image(label, palette=PALETTE):
     '''Converts class labels to color image using a palette.
     
     Parameters
-        label (array<np.uint8>): Class labels for each pixel. Shape=(height, width)
+        label (array<np.uint8>): Class labels for each pixel. Shape=(height, width, 1)
         palette (array<np.uint8>): RGB values for each class. Shape=(255, 3)
         
     Return
         (array<np.uint8>): RGB values for each pixel. Shape=(height, width, 3)
     '''
-    return palette[label]
+    return palette[label[..., 0]]
 
 
 
@@ -117,52 +118,22 @@ def label_to_onehot(label, num_classes=21):
     '''Converts class labels to its one-hot encoding.
     
     Parameters
-        label (array<np.uint8>): Class labels for each pixel. Shape=(height, width)
+        label (array<np.uint8>): Class labels for each pixel. Shape=(height, width, 1)
         
     Return
-        (array<np.uint8>): One-hot encoding of class labels for each pixel. Boundary (class 255) is ignored. 
+        (array<np.uint8>): One-hot encoding of class labels for each pixel. Boundary is ignored. 
                            Shape=(height, width, num_classes)
     '''
-    return (np.arange(21) == label[..., None]).astype(np.uint8)
+    return np.arange(21) == label
 
 
 
 def onehot_to_label(arr):
     '''Opposite of label_to_onehot().'''
-    return np.argmax(arr, axis=-1).astype(np.uint8)
-
-
-
-## =======================
-## Data augmentation
-## =======================
-
-def resize_and_pad(arr, x):
-    '''Resize image into a square, keeping the original aspect ratio by center padding with black (or 
-    boundary, if given class labels).
-    
-    Parameters
-        arr (array<np.uint8>): RGB values or class labels for each pixel. Shape=(height, width[, 3])
-        x (int): length of square
-        
-    Return
-        (array<np.uint8>): Shape=(x, x[, 3])
-    '''
-    ## scale largest dimension to x
-    h, w, *c = arr.shape
-    f = min(float(x)/h, float(x)/w)
-    arr = cv.resize(arr, None, fx=f, fy=f, interpolation=cv.INTER_NEAREST) # NEAREST important for class labels
-                                                                           # images can use LINEAR instead
-    ## pad with zeros
-    h, w, *c = arr.shape
-    if len(c) == 1: # RGB
-        border = (0, 0, 0)
-    else: # label
-        border = 255
-    h_pad, w_pad = x-h, x-w
-    arr = cv.copyMakeBorder(arr, h_pad//2, (h_pad+1)//2, w_pad//2, (w_pad+1)//2, 
-                            cv.BORDER_CONSTANT, value=border)
-    return arr
+    is_labelled = np.sum(arr, axis=-1)
+    arr = np.argmax(arr, axis=-1).astype(np.uint8)
+    arr[is_labelled == 0] = -1 # if pixel has no label, then it is boundary
+    return arr[..., None]
 
 
 
@@ -176,7 +147,7 @@ def get_example(image, label):
     
     Parameters
         image (array<np.uint8>): Shape=(height, width, 3)
-        label (array<np.uint8>): Shape=(height, width)
+        label (array<np.uint8>): Shape=(height, width, 1)
         
     Return
         (tf Example)
@@ -202,7 +173,7 @@ def parse_example(example):
         
     Return
         image (array<np.uint8>): Shape=(height, width, 3)
-        label (array<np.uint8>): Shape=(height, width)
+        label (array<np.uint8>): Shape=(height, width, 1)
     '''
     ## Usage:
     #dataset = tf.data.TFRecordDataset(PATH_TO_TFRECORDS).map(parse_example)
@@ -216,5 +187,5 @@ def parse_example(example):
     height = dct['height']
     width = dct['width']
     image = tf.reshape(tf.io.decode_raw(dct['image'], out_type=tf.uint8), (height, width, 3))
-    label = tf.reshape(tf.io.decode_raw(dct['label'], out_type=tf.uint8), (height, width))
+    label = tf.reshape(tf.io.decode_raw(dct['label'], out_type=tf.uint8), (height, width, 1))
     return image, label
