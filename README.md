@@ -15,11 +15,13 @@ https://github.com/aurora95/Keras-FCN
 
 ## Introduction
 
-The goal of **semantic segmentation** is to identify objects, like cars and dogs, in an image by labelling the corresponding group of pixels as belonging to that class.
+The goal of **semantic segmentation** is to identify objects, like cars and dogs, in an image by labelling the corresponding groups of pixels according to their classes.
 For an introduction, see <a href="https://nanonets.com/blog/semantic-image-segmentation-2020/">this article</a>.
-As an example, below is an image and its pixel labels.
+As an example, below is an image and its labelled pixels.
 
-<img src="assets/biker.jpg" alt="biker" width=300> <img src="assets/biker_label.png" alt="biker label" width=300>
+| <img src="assets/rider.jpg" alt="biker" width=400> | <img src="assets/rider_label.png" alt="true label" width=400> |
+|:---:|:---:|
+| Image | True label |
 
 A **fully convolutional network (FCN)** is an artificial neural network that performs semantic segmentation. 
 The bottom layers of a FCN are those of a convolutional neural network (CNN), usually taken from a pre-trained network like VGGNet or GoogLeNet.
@@ -41,10 +43,10 @@ We have divided our data as follows:
 - Training set: the SBD training set (8,498 images) + last 1,657 images (out of 2,857 total) of the SBD validation set + the 676 non-overlapping images of the Pascal VOC trainval set.
 - Validation set: first 1,200 images (out of 2,857 total) of the SBD validation set
 
-In total, we have 10,831 training samples and 1,200 validation samples.
-The filenames of the training samples are found in <a href="https://github.com/kevinddchen/Keras-FCN/blob/main/data/train_mat.txt">data/train_mat.txt</a> and <a href="https://github.com/kevinddchen/Keras-FCN/blob/main/data/train_png.txt">data/train_png.txt</a>. 
-The filenames of the validation samples are found in <a href="https://github.com/kevinddchen/Keras-FCN/blob/main/data/val_mat.txt">data/val_mat.txt</a>.
-If you want to duplicate our dataset, you can download the <a href="https://github.com/kevinddchen/Keras-FCN/tree/main/data">data/</a> folder and the SBD dataset.
+In total, we have 10,831 training images and 1,200 validation images.
+The filenames of the training images are found in <a href="https://github.com/kevinddchen/Keras-FCN/blob/main/data/train_mat.txt">data/train_mat.txt</a> and <a href="https://github.com/kevinddchen/Keras-FCN/blob/main/data/train_png.txt">data/train_png.txt</a>. 
+The filenames of the validation images are found in <a href="https://github.com/kevinddchen/Keras-FCN/blob/main/data/val_mat.txt">data/val_mat.txt</a>.
+If you want to duplicate our dataset, you can download the <a href="https://github.com/kevinddchen/Keras-FCN/tree/main/data">data/</a> folder of this repository, which contains the 676 extra images of the Pascal VOC dataset, and the SBD dataset from their website.
 After untarring, place the contents of `benchmark_RELEASE/dataset/img` into <a href="https://github.com/kevinddchen/Keras-FCN/tree/main/data/images_mat">data/images_mat/</a> and `benchmark_RELEASE/dataset/cls` into <a href="https://github.com/kevinddchen/Keras-FCN/tree/main/data/labels_mat">data/labels_mat/</a>.
 
 <a href="https://github.com/kevinddchen/Keras-FCN/blob/main/data.ipynb">data.ipynb</a> puts the data into .tfrecords files, since it cannot all be loaded into RAM.
@@ -56,36 +58,37 @@ Our model details can be found in <a href="https://github.com/kevinddchen/Keras-
 
 The base CNN we use is VGG16.
 First, the fully-connected layers are converted into convolutional layers.
-Second, the final layer that predicts 1000 classes is replaced by a layer that predicts the 20 Pascal VOC classes.
-Third, these predictions are fed into a transposed convolutional layer that upsamples 32x to the original resolution via bilinear interpolation.
+Second, the final layer that predicts 1000 classes is replaced by a layer that predicts the 21 Pascal VOC classes (including background).
+Third, these predictions are fed into a deconvolution layer that upsamples 32x to the original resolution via bilinear interpolation.
 This defines the **FCN32** network.
 
 As previously mentioned, we utilize the intermediate layers of the CNN to improve the accuracy of the segmentation.
-For the **FCN16** network, instead of upsampling 32x we first upsample 2x to get an output whose resolution matches that of the 'block4_pool' layer of VGG16.
-We predict 20 classes from 'block4_pool' and add these two outputs together.
+For the **FCN16** network, instead of upsampling 32x we first upsample 2x to get an output whose resolution matches that of the `block4_pool` layer of VGG16.
+We predict 20 classes from `block4_pool` and add these two outputs together.
 This is upsampled 16x to get to the original resolution.
-A similar procedure is also done for the **FCN8** network, where we additionally include predictions from the 'block3_pool' layer of VGG16.
+A similar procedure is also done for the **FCN8** network, where we additionally include predictions from the `block3_pool` layer of VGG16.
 
 The training details can be found in <a href="https://github.com/kevinddchen/Keras-FCN/blob/main/train.ipynb">train.ipynb</a>.
 We fine-tune the model by training the FCN32, FCN16, and FCN8 layers in turn, freezing deeper parts of the network that are harder to train.
-Each model is trained for 10 epochs with the Adam optimizer at a fixed training rate of 1e-4, with $$L_2$$ regularization with strength 1e-5.
+Each model is trained for 20 epochs with the Adam optimizer at a fixed training rate of `1e-4`, with L<sup>2</sup> regularization with strength `1e-6`.
 
 ## Results
 
-Below are the predicted labels for the example image.
+Below are the predicted labels for the example image above.
 
-| <img src="assets/fcn32.png" alt="32" width=300> | <img src="assets/fcn16.png" alt="16" width=300> | <img src="assets/fcn8.png" alt="8" width=300> |
-| :--: | :--: | :--: |
-| *FCN32* | *FCN16* | *FCN8* |
+| <img src="assets/rider_label.png" alt="true label" width=200> | <img src="assets/fcn32.png" alt="fcn32 pred" width=200> | <img src="assets/fcn16.png" alt="fcn16 pred" width=200> | <img src="assets/fcn8.png" alt="fcn8 pred" width=200> |
+| :--: | :--: | :--: | :--: |
+| True label | FCN32 prediction | FCN16 prediction | FCN8 prediction |
 
 The performance of these models on the validation set are summarized below.
-I did not bother with a testing set since I did not use anything like early stopping, but I agree this is not good practice.
 
 | Model | Pixel Accuracy | Mean IoU |
 | --- | --- | --- |
 | FCN32 | 0.9282 | 0.5895 |
 | FCN16 | 0.9285 | 0.5958 |
 | FCN8 | 0.9320 | 0.6115 |
+
+At the time of writing, the Pascal VOC website was down so I could not evaluate on the test set.
 
 ## Next Steps
 
@@ -94,7 +97,6 @@ Although we tested on a different dataset, our performance is still not as good 
 To get better performance, there are a couple of things that we can still do:
 
 - Data set augmentation, such as cropping
-- Complete training of models
 - Use ensemble methods
 
 When I have time, I will get to these.
