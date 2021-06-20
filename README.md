@@ -31,12 +31,12 @@ This gives us a label for each pixel.
 When upsampling, we can also utilize the intermediate layers of the CNN to improve the accuracy of the segmentation.
 For an introduction, see <a href="https://nanonets.com/blog/how-to-do-semantic-segmentation-using-deep-learning/">this article</a>.
 
-The <a href="http://host.robots.ox.ac.uk/pascal/VOC/">Pascal VOC project</a> is a dataset containing images whose pixels have been labeled according to 20 classes, which include aeroplanes, cars, and people.
+The <a href="http://host.robots.ox.ac.uk/pascal/VOC/">Pascal VOC project</a> is a dataset containing images whose pixels have been labeled according to 20 classes (plus the background), which include aeroplanes, cars, and people.
 We will be performing semantic segmentation according to this dataset.
 
 ## Data
 
-The number of images with labels is augmented by the <a href="http://home.bharathh.info/pubs/codes/SBD/download.html">Berkeley Segmentation Boundaries Dataset (SBD)</a>, which contains 11,355 labelled images.
+The number of images with labels in the Pascal VOC dataset is augmented by the <a href="http://home.bharathh.info/pubs/codes/SBD/download.html">Berkeley Segmentation Boundaries Dataset (SBD)</a>, which contains 11,355 labelled images.
 However, there are 676 labelled images in the original Pascal VOC dataset that are missing from the SBD.
 We have divided our data as follows:
 
@@ -53,30 +53,30 @@ After untarring, place the contents of `benchmark_RELEASE/dataset/img` into <a h
 
 ## Model
 
-We follow the steps in the <a href="https://arxiv.org/abs/1605.06211">original paper by Shelhamer et al. (2016)</a>.
+We followed the steps in the original paper.
 Our model details can be found in <a href="https://github.com/kevinddchen/Keras-FCN/blob/main/models.py">models.py</a>.
 
-The base CNN we use is VGG16.
-First, the fully-connected layers are converted into convolutional layers.
-Second, the final layer that predicts 1000 classes is replaced by a layer that predicts the 21 Pascal VOC classes (including background).
-Third, these predictions are fed into a deconvolution layer that upsamples 32x to the original resolution via bilinear interpolation.
+The base CNN was VGG16.
+First, the fully-connected layers were converted into convolutional layers.
+Second, the final layer of VGG16 that predicted 1000 classes was replaced by a layer that predicted the 21 Pascal VOC classes (including the background).
+Third, these predictions were fed into a deconvolution layer that upsampled 32x to the original resolution via bilinear interpolation.
 This defines the **FCN32** network.
 
-As previously mentioned, we utilize the intermediate layers of the CNN to improve the accuracy of the segmentation.
-For the **FCN16** network, instead of upsampling 32x we first upsample 2x to get an output whose resolution matches that of the `block4_pool` layer of VGG16.
-We predict 20 classes from `block4_pool` and add these two outputs together.
-This is upsampled 16x to get to the original resolution.
-A similar procedure is also done for the **FCN8** network, where we additionally include predictions from the `block3_pool` layer of VGG16.
+As previously mentioned, we utilized the intermediate layers of the CNN to improve the accuracy of the segmentation.
+For the **FCN16** network, instead of upsampling 32x we first upsampled 2x to get an output whose resolution matched that of the `block4_pool` layer of VGG16.
+We predicted 21 classes from `block4_pool` and added these two outputs together.
+This was upsampled 16x to get to the original resolution.
+A similar procedure was also done for the **FCN8** network, where we additionally included predictions from the `block3_pool` layer of VGG16.
 
 The training details can be found in <a href="https://github.com/kevinddchen/Keras-FCN/blob/main/train.ipynb">train.ipynb</a>.
-We fine-tune the model by training the FCN32, FCN16, and FCN8 layers in turn, freezing deeper parts of the network that are harder to train.
-Each model is trained for 20 epochs with the Adam optimizer at a fixed training rate of `1e-4`, with L<sup>2</sup> regularization with strength `1e-6`.
+We trained each FCN32, FCN16, and FCN8 model from scratch for 20 epochs using the Adam optimizer at a fixed training rate of `1e-4`, with L<sup>2</sup> regularization with strength `1e-6`.
+Some dropout is also added.
 
 ## Results
 
 Below are the predicted labels for the example image above.
 
-| <img src="assets/rider_label.png" alt="true label" width=200> | <img src="assets/fcn32.png" alt="fcn32 pred" width=200> | <img src="assets/fcn16.png" alt="fcn16 pred" width=200> | <img src="assets/fcn8.png" alt="fcn8 pred" width=200> |
+| <img src="assets/rider_label.png" alt="true label" width=200> | <img src="assets/fcn32.png" alt="fcn32 pred" width=200> |  |  |
 | :--: | :--: | :--: | :--: |
 | True label | FCN32 prediction | FCN16 prediction | FCN8 prediction |
 
@@ -84,16 +84,16 @@ The performance of these models on the validation set are summarized below.
 
 | Model | Pixel Accuracy | Mean IoU |
 | --- | --- | --- |
-| FCN32 | 0.9282 | 0.5895 |
-| FCN16 | 0.9285 | 0.5958 |
-| FCN8 | 0.9320 | 0.6115 |
+| FCN32 |  |  |
+| FCN16 |  |  |
+| FCN8 |  |  |
 
 At the time of writing, the Pascal VOC website was down so I could not evaluate on the test set.
 
 ## Next Steps
 
 I am quite happy with the performance of the models given the relatively simple implementation and short training period.
-Although we tested on a different dataset, our performance is still not as good as Shelhamer's.
+Our performance was comparable to that of Shelhamer, although we validated on a different dataset.
 To get better performance, there are a couple of things that we can still do:
 
 - Data set augmentation, such as cropping
