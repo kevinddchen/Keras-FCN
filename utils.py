@@ -59,11 +59,11 @@ PALETTE = np.reshape([
 def get_image(path):
     '''Retrieve image as array of RGB values from .jpg file.
     
-    Parameters
-        path (string): Path to .jpg file
+    Args:
+      path (string): Path to .jpg file
         
-    Return
-        (array<np.uint8>): RGB values for each pixel. Shape=(height, width, 3)
+    Returns:
+      (array<np.uint8>): RGB values for each pixel. Shape=(height, width, 3)
     '''
     jpg = Image.open(path).convert('RGB')
     return np.array(jpg)
@@ -73,11 +73,11 @@ def get_image(path):
 def get_label_mat(path):
     '''Retrieve class labels for each pixel from Berkeley SBD .mat file.
     
-    Parameters
-        path (string): Path to .mat file
+    Args:
+      path (string): Path to .mat file
     
-    Return
-        (array<np.uint8>): Class as an integer in [0, 20] for each pixel. Shape=(height, width, 1)
+    Returns:
+      (array<np.uint8>): Class as an integer in [0, 20] for each pixel. Shape=(height, width, 1)
     '''
     mat = scipy.io.loadmat(path)
     arr = mat['GTcls']['Segmentation'].item(0,0) # this is how segmentation is stored
@@ -88,11 +88,11 @@ def get_label_mat(path):
 def get_label_png(path):
     '''Retrieve class labels for each pixel from Pascal VOC .png file.
     
-    Parameters
-        path (string): Path to .png file
+    Args:
+      path (string): Path to .png file
     
-    Return
-        (array<np.uint8>): Class as an integer in [-1, 20], where -1 is boundary, for each pixel. Shape=(height, width, 1)
+    Returns:
+      (array<np.uint8>): Class as an integer in [-1, 20], where -1 is boundary, for each pixel. Shape=(height, width, 1)
     '''
     png = Image.open(path) # image is saved as palettised png. OpenCV cannot load without converting.
     arr = np.array(png)
@@ -103,12 +103,12 @@ def get_label_png(path):
 def label_to_image(label, palette=PALETTE):
     '''Converts class labels to color image using a palette.
     
-    Parameters
-        label (array<np.uint8>): Class labels for each pixel. Shape=(height, width, 1)
-        palette (array<np.uint8>): RGB values for each class. Shape=(255, 3)
+    Args:
+      label (array<np.uint8>): Class labels for each pixel. Shape=(height, width, 1)
+      palette (array<np.uint8>): RGB values for each class. Shape=(255, 3)
         
-    Return
-        (array<np.uint8>): RGB values for each pixel. Shape=(height, width, 3)
+    Returns:
+      (array<np.uint8>): RGB values for each pixel. Shape=(height, width, 3)
     '''
     return palette[label[..., 0]].astype(np.uint8)
 
@@ -117,12 +117,12 @@ def label_to_image(label, palette=PALETTE):
 def label_to_onehot(label, num_classes=21):
     '''Converts class labels to its one-hot encoding.
     
-    Parameters
-        label (array<np.uint8>): Class labels for each pixel. Shape=(height, width, 1)
+    Args:
+      label (array<np.uint8>): Class labels for each pixel. Shape=(height, width, 1)
         
-    Return
-        (array<np.uint8>): One-hot encoding of class labels for each pixel. Boundary is ignored. 
-                           Shape=(height, width, num_classes)
+    Returns:
+      (array<np.uint8>): One-hot encoding of class labels for each pixel. Boundary is ignored.  
+        Shape=(height, width, num_classes)
     '''
     return (np.arange(21) == label).astype(np.uint8)
 
@@ -143,12 +143,12 @@ def onehot_to_label(arr):
 def get_example(image, label):
     '''Given image and label, produce a tf Example that can be written to a .tfrecords file.
     
-    Parameters
-        image (array<np.uint8>): Shape=(height, width, 3)
-        label (array<np.uint8>): Shape=(height, width, 1)
+    Args:
+      image (array<np.uint8>): Shape=(height, width, 3)
+      label (array<np.uint8>): Shape=(height, width, 1)
         
-    Return
-        (tf Example)
+    Returns:
+      (tf Example)
     '''
     ## Usage:
     #with tf.io.TFRecordWriter(PATH_TO_TFRECORDS) as writer:
@@ -166,12 +166,12 @@ def get_example(image, label):
 def parse_example(example):
     '''Parse tf Example to obtain image and label.
     
-    Parameters
-        example (tf Example)
+    Args:
+      example (tf Example)
         
-    Return
-        image (array<np.uint8>): Shape=(height, width, 3)
-        label (array<np.uint8>): Shape=(height, width, 1)
+    Returns:
+      image (array<np.uint8>): Shape=(height, width, 3)
+      label (array<np.uint8>): Shape=(height, width, 1)
     '''
     ## Usage:
     #dataset = tf.data.TFRecordDataset(PATH_TO_TFRECORDS).map(parse_example)
