@@ -83,13 +83,13 @@ def fcn32(vgg16, l2=0):
       (keras Model)
     '''
     x = keras.layers.Conv2D(filters=21, kernel_size=(1,1), strides=(1,1), padding='same', activation='linear',
-                        kernel_regularizer=keras.regularizers.L2(l2=l2),
-                        name='score7')(vgg16.get_layer('drop7').output)
+                            kernel_regularizer=keras.regularizers.L2(l2=l2),
+                            name='score7')(vgg16.get_layer('drop7').output)
     x = keras.layers.Conv2DTranspose(filters=21, kernel_size=(64,64), strides=(32,32),
-                                 padding='same', use_bias=False, activation='softmax',
-                                 kernel_initializer=BilinearInitializer(),
-                                 kernel_regularizer=keras.regularizers.L2(l2=l2),
-                                 name='fcn32')(x)
+                                     padding='same', use_bias=False, activation='softmax',
+                                     kernel_initializer=BilinearInitializer(),
+                                     kernel_regularizer=keras.regularizers.L2(l2=l2),
+                                     name='fcn32')(x)
     return keras.Model(vgg16.input, x)
 
 
@@ -187,7 +187,7 @@ def crossentropy(y_true, y_pred_onehot):
     
     
 def pixelacc(y_true, y_pred_onehot):
-    '''Custom accuracy to handle borders (class = -1).'''
+    '''Custom pixel accuracy to handle borders (class = -1).'''
     n_valid = tf.math.reduce_sum(tf.cast(y_true != 255, tf.float32))
     y_true = tf.cast(y_true, tf.int32)[..., 0]
     y_pred = tf.argmax(y_pred_onehot, axis=-1, output_type=tf.int32)
