@@ -124,15 +124,13 @@ def label_to_onehot(label, num_classes=21):
         (array<np.uint8>): One-hot encoding of class labels for each pixel. Boundary is ignored. 
                            Shape=(height, width, num_classes)
     '''
-    return np.arange(21) == label
+    return (np.arange(21) == label).astype(np.uint8)
 
 
 
 def onehot_to_label(arr):
     '''Opposite of label_to_onehot().'''
-    is_labelled = np.sum(arr, axis=-1)
     arr = np.argmax(arr, axis=-1).astype(np.uint8)
-    arr[is_labelled == 0] = -1 # if pixel has no label, then it is boundary
     return arr[..., None]
 
 

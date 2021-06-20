@@ -11,12 +11,12 @@ import tensorflow.keras as keras
 def vgg16(l2=0, dropout=0):
     '''Convolutionized VGG16 network. 
 
-    Parameters
-        l2 (float): L2 regularization strength
-        dropout (float): Dropout rate
+    Args:
+      l2 (float): L2 regularization strength
+      dropout (float): Dropout rate
 
-    Return
-        (keras Model)
+    Returns:
+      (keras Model)
     '''
     ## Input
     input_layer = keras.Input(shape=(None, None, 3), name='input')
@@ -75,12 +75,12 @@ def vgg16(l2=0, dropout=0):
 def fcn32(vgg16, l2=0):
     '''32x upsampled FCN.
 
-    Parameters
-        vgg16 (keras Model): VGG16 model to build upon
-        l2 (float): L2 regularization strength
+    Args:
+      vgg16 (keras Model): VGG16 model to build upon
+      l2 (float): L2 regularization strength
 
-    Return
-        (keras Model)
+    Returns:
+      (keras Model)
     '''
     x = keras.layers.Conv2D(filters=21, kernel_size=(1,1), strides=(1,1), padding='same', activation='linear',
                         kernel_regularizer=keras.regularizers.L2(l2=l2),
@@ -97,13 +97,13 @@ def fcn32(vgg16, l2=0):
 def fcn16(vgg16, fcn32, l2=0):
     '''16x upsampled FCN.
 
-    Parameters
-        vgg16 (keras Model): VGG16 model to build upon
-        fcn32 (keras Model): FCN32 model to build upon
-        l2 (float): L2 regularization strength
+    Args:
+      vgg16 (keras Model): VGG16 model to build upon
+      fcn32 (keras Model): FCN32 model to build upon
+      l2 (float): L2 regularization strength
 
-    Return
-        (keras Model)
+    Returns:
+      (keras Model)
     '''
     x = keras.layers.Conv2DTranspose(filters=21, kernel_size=(4,4), strides=(2,2),
                                      padding='same', use_bias=False, activation='linear',
@@ -127,13 +127,13 @@ def fcn16(vgg16, fcn32, l2=0):
 def fcn8(vgg16, fcn16, l2=0):
     '''8x upsampled FCN.
 
-    Parameters
-        vgg16 (keras Model): VGG16 model to build upon
-        fcn16 (keras Model): FCN16 model to build upon
-        l2 (float): L2 regularization strength
+    Args:
+      vgg16 (keras Model): VGG16 model to build upon
+      fcn16 (keras Model): FCN16 model to build upon
+      l2 (float): L2 regularization strength
 
     Return
-        (keras Model)
+      (keras Model)
     '''
     x = keras.layers.Conv2DTranspose(filters=21, kernel_size=(4,4), strides=(2,2),
                                      padding='same', use_bias=False, activation='linear',
@@ -154,11 +154,46 @@ def fcn8(vgg16, fcn16, l2=0):
 
 
 
+## ================
+## Misc functions for training
+## ================
+
+class MyCategoricalCrossentropy(keras.losses.Loss):
+    '''Custom cross-entropy to handle borders (class = -1).'''
+    def __call__(self, y_true, y_pred_onehot, sample_weight=None):
+        ## y_true has shape (512, 512, 1)
+        ## y_pred has shape (512, 512, 21)
+        y_true_onehot = tf.cast(np.arange(21) == y_true, tf.float32)
+        return -21*tf.math.reduce_mean(y_true_onehot * tf.math.log(y_pred_onehot + 1e-7))
+
+    
+    
+class MyMeanIoU(keras.metrics.MeanIoU):
+    '''Custom meanIoU to handle borders (class = -1).'''
+    def update_state(self, y_true, y_pred_onehot, sample_weight=None):
+        y_pred = tf.argmax(y_pred_onehot, axis=-1)
+        ## add 1 so boundary class=0
+        y_true = tf.cast(y_true+1, self._dtype)
+        y_pred = tf.cast(y_pred+1, self._dtype)
+        # Flatten the input if its rank > 1.
+        if y_pred.shape.ndims > 1:
+            y_pred = tf.reshape(y_pred, [-1])
+        if y_true.shape.ndims > 1:
+            y_true = tf.reshape(y_true, [-1])
+        ## calculate confusion matrix with one extra class
+        current_cm = tf.math.confusion_matrix(
+            y_true,
+            y_pred,
+            self.num_classes+1,
+            weights=sample_weight,
+            dtype=self._dtype)
+        return self.total_cm.assign_add(current_cm[1:, 1:]) # remove boundary
+    
+
+
 class BilinearInitializer(keras.initializers.Initializer):
     '''Initializer for Conv2DTranspose to perform bilinear interpolation on each channel.'''
-    def __init__(self):
-        pass
-    def __call__(self, shape, dtype=None):
+    def __call__(self, shape, dtype=None, **kwargs):
         kernel_size, _, filters, _ = shape
         arr = np.zeros((kernel_size, kernel_size, filters, filters))
         ## make filter that performs bilinear interpolation through Conv2DTranspose
