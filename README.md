@@ -73,7 +73,7 @@ We trained each FCN32, FCN16, and FCN8 model from scratch for 25 epochs using th
 
 Below are the predicted labels for an example image above, which is in the validation set.
 
-| <img src="assets/rider_label.png" alt="true label" width=300> | <img src="assets/fcn32.png" alt="fcn32 pred" width=300> | <img src="assets/fcn16.png" alt="fcn32 pred" width=300> | <img src="assets/fcn8.png" alt="fcn32 pred" width=300> |
+| <img src="assets/rider_label.png" alt="true label" width=300> | <img src="assets/fcn32.png" alt="fcn32 pred" width=300> | <img src="assets/fcn16.png" alt="fcn16 pred" width=300> | <img src="assets/fcn8.png" alt="fcn8 pred" width=300> |
 | :--: | :--: | :--: | :--: |
 | True label | FCN32 prediction | FCN16 prediction | FCN8 prediction |
 | Pixel accuracy:| 0.968 | 0.980 | 0.972 |
@@ -86,7 +86,10 @@ The performance of these models on the validation set are summarized below.
 | Pixel accuracy: | 0.896 | 0.899 | 0.898 | 
 | Mean IoU: | 0.568 | 0.575 | 0.576 |
 
+<img src="assets/loss.png" alt="loss" width=400> <img src="assets/meaniou.png" alt="meaniou" width=400>
+
 At the time of writing, the Pascal VOC website was down so I could not evaluate on the test set.
+The weights for the models can be downloaded from <a href="https://drive.google.com/drive/folders/1XCWZhc6wDXLUjHMWcsUgIfOnPb0olxo_?usp=sharing">this Google drive</a>.
 
 ## Next Steps
 
