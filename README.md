@@ -1,5 +1,3 @@
-# WORK CURRENTLY IN PROGRESS!
-
 # Keras-FCN
 
 This is a Keras implementation of the fully convolutional network outlined in <a href="https://arxiv.org/abs/1605.06211">Shelhamer et al. (2016)</a>, which performs semantic image segmentation on the Pascal VOC dataset.
@@ -31,7 +29,7 @@ This gives us a label for each pixel.
 When upsampling, we can also utilize the intermediate layers of the CNN to improve the accuracy of the segmentation.
 For an introduction, see <a href="https://nanonets.com/blog/how-to-do-semantic-segmentation-using-deep-learning/">this article</a>.
 
-The <a href="http://host.robots.ox.ac.uk/pascal/VOC/">Pascal VOC project</a> is a dataset containing images whose pixels have been labeled according to 20 classes (plus the background), which include aeroplanes, cars, and people.
+The <a href="http://host.robots.ox.ac.uk/pascal/VOC/">Pascal VOC project</a> is a dataset containing images whose pixels have been labeled according to 20 classes (excluding the background), which include aeroplanes, cars, and people.
 We will be performing semantic segmentation according to this dataset.
 
 ## Data
@@ -56,47 +54,47 @@ After untarring, place the contents of `benchmark_RELEASE/dataset/img` into [dat
 We followed the steps in the original paper.
 Our model details can be found in [models.py](models.py).
 
-The base CNN was VGG16.
-First, the fully-connected layers were converted into convolutional layers.
-Second, the final layer of VGG16 that predicted 1000 classes was replaced by a layer that predicted the 21 Pascal VOC classes (including the background).
-Third, these predictions were fed into a deconvolution layer that upsampled 32x to the original resolution via bilinear interpolation.
+The base CNN is VGG16.
+First, the fully-connected layers are converted into convolutional layers.
+Second, the final layer of VGG16 that predicts 1000 classes is replaced by a layer that predicts the 21 Pascal VOC classes (including the background).
+Third, these predictions are fed into a deconvolution layer that upsampls 32x to the original resolution via bilinear interpolation.
 This defines the **FCN32** network.
 
-As previously mentioned, we utilized the intermediate layers of the CNN to improve the accuracy of the segmentation.
-For the **FCN16** network, instead of upsampling 32x we first upsampled 2x to get an output whose resolution matched that of the `block4_pool` layer of VGG16.
-We predicted 21 classes from `block4_pool` and added these two outputs together.
-This was upsampled 16x to get to the original resolution.
-A similar procedure was also done for the **FCN8** network, where we additionally included predictions from the `block3_pool` layer of VGG16.
+As previously mentioned, we utilize the intermediate layers of the CNN to improve the accuracy of the segmentation.
+For the **FCN16** network, instead of upsampling 32x we first upsample 2x to get an output whose resolution matches that of the `block4_pool` layer of VGG16.
+We predicte 21 classes from `block4_pool` and add these two outputs together.
+This is upsampled 16x to get to the original resolution.
+A similar procedure is also done for the **FCN8** network, where we additionally include predictions from the `block3_pool` layer of VGG16.
 
 The training details can be found in [train.ipynb](train.ipynb).
-We trained each FCN32, FCN16, and FCN8 model from scratch for 20 epochs using the Adam optimizer at a fixed training rate of `1e-4`, with L<sup>2</sup> regularization with strength `1e-6`.
-Some dropout is also added.
+We trained each FCN32, FCN16, and FCN8 model from scratch for 25 epochs using the Adam optimizer at a fixed training rate of `1e-4`, with L<sup>2</sup> regularization with strength `1e-6`.
 
 ## Results
 
-Below are the predicted labels for the example image above.
+Below are the predicted labels for an example image above, which is in the validation set.
 
-| <img src="assets/rider_label.png" alt="true label" width=200> | <img src="assets/fcn32.png" alt="fcn32 pred" width=200> |  |  |
+| <img src="assets/rider_label.png" alt="true label" width=300> | <img src="assets/fcn32.png" alt="fcn32 pred" width=300> | <img src="assets/fcn16.png" alt="fcn32 pred" width=300> | <img src="assets/fcn8.png" alt="fcn32 pred" width=300> |
 | :--: | :--: | :--: | :--: |
 | True label | FCN32 prediction | FCN16 prediction | FCN8 prediction |
+| Pixel accuracy:| 0.968 | 0.980 | 0.972 |
+| Mean IoU: | 0.774 | 0.854 | 0.787 |
 
 The performance of these models on the validation set are summarized below.
 
-| Model | Pixel Accuracy | Mean IoU |
-| --- | --- | --- |
-| FCN32 |  |  |
-| FCN16 |  |  |
-| FCN8 |  |  |
+| Model | FCN32 | FCN16 | FCN8 |
+| :--: | :--: | :--: | :--: |
+| Pixel accuracy: | 0.896 | 0.899 | 0.898 | 
+| Mean IoU: | 0.568 | 0.575 | 0.576 |
 
 At the time of writing, the Pascal VOC website was down so I could not evaluate on the test set.
 
 ## Next Steps
 
 I am quite happy with the performance of the models given the relatively simple implementation and short training period.
-Our performance was comparable to that of Shelhamer, although we validated on a different dataset.
-To get better performance, there are a couple of things that we can still do:
+Our performance is slightly worse than that of Shelhamer.
+To get better performance, there are a couple of things that we still need to do:
 
-- Data set augmentation, such as cropping
+- Data set augmentation, such as cropping. This seems to be very important, but relatively easy to include.
 - Use ensemble methods
 
 When I have time, I will get to these.
